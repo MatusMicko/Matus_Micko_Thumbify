@@ -1,1061 +1,1980 @@
 <!DOCTYPE html>
-<html lang="sk">
+<html lang="sk" data-theme="dark" data-lang="sk">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>GRADFLOW — Gradient Studio</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Syne+Mono&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thumbify</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0e0e0e;
-  --surface: #161616;
-  --surface2: #1f1f1f;
-  --ink: #f0ede8;
-  --ink2: #888;
-  --accent: #ff4d1c;
-  --border: rgba(255,255,255,0.07);
-}
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --bg4: #22222f;
+    --border: #2a2a3a;
+    --text: #f0f0f8;
+    --text2: #9090b0;
+    --text3: #5a5a7a;
+    --accent: #7c5cfc;
+    --accent2: #a78bfa;
+    --accent-glow: rgba(124,92,252,0.3);
+    --success: #34d399;
+    --warning: #fbbf24;
+    --danger: #f87171;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --transition: 0.2s ease;
+  }
+  [data-theme="light"] {
+    --bg: #f4f4fb;
+    --bg2: #ffffff;
+    --bg3: #eaeaf5;
+    --bg4: #ddddf0;
+    --border: #d0d0e8;
+    --text: #12121e;
+    --text2: #50507a;
+    --text3: #9090b0;
+    --accent: #6c4ef0;
+    --accent2: #8b6ef5;
+    --accent-glow: rgba(108,78,240,0.2);
+    --shadow: 0 4px 24px rgba(0,0,0,0.1);
+  }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: 'Syne', sans-serif; overflow: hidden; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* BACK */
-.back-btn {
-  position: fixed; top: 18px; left: 18px; z-index: 200;
-  display: flex; align-items: center; gap: 6px;
-  padding: 7px 14px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--ink);
-  font-family: 'Syne Mono', monospace;
-  font-size: 11px; letter-spacing: 0.08em;
-  text-decoration: none;
-  backdrop-filter: blur(8px);
-  transition: background 0.15s, transform 0.15s;
-}
-.back-btn:hover { background: rgba(255,77,28,0.15); border-color: var(--accent); transform: translateX(-2px); }
-.back-btn svg { width: 13px; height: 13px; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background var(--transition), color var(--transition);
+  }
 
-/* LAYOUT */
-.app { display: grid; grid-template-columns: 1fr 300px; height: 100vh; }
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+  }
+  .logo span { font-weight: 800; }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
 
-/* PREVIEW */
-.preview {
-  position: relative;
-  overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-}
+  /* PILL SWITCH */
+  .pill-switch {
+    display: flex;
+    align-items: center;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    cursor: pointer;
+    position: relative;
+    height: 36px;
+    user-select: none;
+  }
+  .pill-switch .pill-track {
+    display: flex;
+    position: relative;
+    z-index: 1;
+    width: fit-content;
+  }
+  .pill-switch .pill-option {
+    padding: 0 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 30px;
+    height: 30px;
+    border-radius: 999px;
+    transition: color 0.28s ease;
+    white-space: nowrap;
+    position: relative;
+    z-index: 2;
+  }
+  .pill-switch .pill-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 30px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 2px 8px var(--accent-glow);
+    transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1), width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+  .pill-switch .pill-option.active { color: #fff; }
+  .pill-switch .pill-option.inactive { color: var(--text2); }
 
-#gradCanvas {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%;
-}
+  .back-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all var(--transition);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .back-btn:hover { background: var(--bg4); color: var(--text); }
 
-.preview-overlay {
-  position: absolute; inset: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 40px,
-    rgba(255,255,255,0.012) 40px,
-    rgba(255,255,255,0.012) 41px
-  );
-  pointer-events: none;
-}
+  /* MAIN LAYOUT */
+  main { display: flex; height: calc(100vh - 61px); overflow: hidden; }
 
-.logo-overlay {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: clamp(48px, 8vw, 100px);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: rgba(255,255,255,0.07);
-  pointer-events: none;
-  user-select: none;
-  white-space: nowrap;
-  mix-blend-mode: overlay;
-}
+  /* LEFT PANEL */
+  .panel-left {
+    width: 300px;
+    min-width: 260px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
 
-.preview-badge {
-  position: absolute; bottom: 20px; left: 20px;
-  font-family: 'Syne Mono', monospace;
-  font-size: 10px; letter-spacing: 0.15em;
-  color: rgba(255,255,255,0.35);
-  text-transform: uppercase;
-}
+  /* CENTER CANVAS */
+  .panel-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
 
-/* DOWNLOAD BTN */
-.download-btn {
-  position: absolute; bottom: 20px; right: 20px;
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 20px;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 4px;
-  color: #fff;
-  font-family: 'Syne', sans-serif;
-  font-size: 12px; font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  backdrop-filter: blur(12px);
-  transition: all 0.2s;
-}
-.download-btn:hover { background: rgba(255,77,28,0.7); border-color: var(--accent); transform: translateY(-2px); }
+  /* RIGHT PANEL */
+  .panel-right {
+    width: 280px;
+    min-width: 240px;
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
 
-/* SIDEBAR */
-.sidebar {
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  display: flex; flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.sidebar::-webkit-scrollbar { width: 3px; }
-.sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+  /* PANEL SECTIONS */
+  .panel-section {
+    padding: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text3);
+    margin-bottom: 14px;
+  }
 
-/* SIDEBAR HEADER */
-.sidebar-header {
-  padding: 20px 20px 16px;
-  border-bottom: 1px solid var(--border);
-}
-.app-name {
-  font-size: 20px; font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
-.app-name span { color: var(--accent); }
-.app-sub {
-  font-family: 'Syne Mono', monospace;
-  font-size: 9px; letter-spacing: 0.18em;
-  color: var(--ink2); margin-top: 4px;
-  text-transform: uppercase;
-}
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    background: var(--bg3);
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.08);
+  }
+  .upload-icon { font-size: 2rem; margin-bottom: 8px; }
+  .upload-text { font-size: 0.82rem; color: var(--text2); line-height: 1.5; }
+  .upload-text strong { color: var(--accent2); }
+  #fileInput { display: none; }
 
-/* PANELS */
-.panel {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-.panel-label {
-  font-family: 'Syne Mono', monospace;
-  font-size: 9px; letter-spacing: 0.2em;
-  color: var(--ink2); text-transform: uppercase;
-  margin-bottom: 12px;
-}
+  /* VIDEO FRAMES */
+  .frames-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .frame-item {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all var(--transition);
+    aspect-ratio: 16/9;
+    background: var(--bg4);
+  }
+  .frame-item:hover { border-color: var(--accent2); }
+  .frame-item.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+  .frame-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .frame-time {
+    font-size: 0.65rem;
+    color: var(--text3);
+    text-align: center;
+    padding: 3px 0;
+    background: var(--bg4);
+  }
 
-/* COLOR STOPS */
-.color-stops {
-  display: flex; flex-direction: column; gap: 8px;
-}
-.stop-row {
-  display: flex; align-items: center; gap: 8px;
-}
-.color-swatch {
-  width: 32px; height: 32px;
-  border-radius: 4px;
-  border: 2px solid var(--border);
-  cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
-  flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
-}
-.color-swatch:hover { transform: scale(1.1); border-color: rgba(255,255,255,0.3); }
-.color-swatch input[type=color] {
-  position: absolute; inset: 0;
-  opacity: 0; cursor: pointer;
-  width: 100%; height: 100%;
-}
+  /* CANVAS AREA */
+  .canvas-wrapper {
+    position: relative;
+    display: block;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.5);
+    border-radius: var(--radius);
+    overflow: hidden;
+    /* Scales down to fit panel, always 16:9, no distortion */
+    width: min(100%, calc((100vh - 160px) * 16 / 9));
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+  #mainCanvas {
+    display: block;
+    /* Fill wrapper at display size; internal resolution stays 1280x720 */
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius);
+  }
+  .canvas-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text3);
+    text-align: center;
+  }
+  .canvas-placeholder .big-icon { font-size: 4rem; opacity: 0.4; }
+  .canvas-placeholder p { font-size: 0.9rem; max-width: 280px; line-height: 1.6; }
 
-.stop-pos {
-  flex: 1;
-  -webkit-appearance: none;
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-.stop-pos::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: var(--ink);
-  border: 2px solid var(--bg);
-  cursor: pointer;
-}
+  /* CANVAS TOOLBAR */
+  .canvas-toolbar {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 14px;
+    backdrop-filter: blur(12px);
+  }
+  .tool-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 1rem;
+    transition: all var(--transition);
+  }
+  .tool-btn:hover, .tool-btn.active { background: var(--accent); color: white; }
+  .tool-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .tool-btn:disabled:hover { background: none; color: var(--text2); }
+  .toolbar-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
 
-.remove-stop {
-  width: 22px; height: 22px;
-  border-radius: 3px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--ink2);
-  cursor: pointer;
-  font-size: 14px; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-.remove-stop:hover { border-color: var(--accent); color: var(--accent); }
+  /* SLIDERS */
+  .slider-group { margin-bottom: 14px; }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  .slider-label span { color: var(--accent2); font-weight: 500; }
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 99px;
+    background: var(--bg4);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    transition: box-shadow var(--transition);
+  }
+  input[type=range]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 5px var(--accent-glow);
+  }
 
-.add-stop-btn {
-  width: 100%;
-  padding: 8px;
-  background: var(--surface2);
-  border: 1px dashed var(--border);
-  border-radius: 4px;
-  color: var(--ink2);
-  font-family: 'Syne', sans-serif;
-  font-size: 11px; font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 4px;
-}
-.add-stop-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(255,77,28,0.05); }
+  /* FILTERS */
+  .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .filter-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 6px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    color: var(--text2);
+    text-align: center;
+    transition: all var(--transition);
+  }
+  .filter-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .filter-preview {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 4px;
+    background: var(--bg4);
+    margin-bottom: 5px;
+    overflow: hidden;
+  }
+  .filter-preview canvas { width: 100%; height: 100%; }
 
-/* TYPE BUTTONS */
-.type-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
-}
-.type-btn {
-  padding: 8px 6px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--ink2);
-  font-family: 'Syne Mono', monospace;
-  font-size: 9px; letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-.type-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--ink); }
-.type-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,77,28,0.08); }
+  /* TEXT OVERLAY */
+  .text-input-group { margin-bottom: 10px; }
+  .text-input-group label { font-size: 0.78rem; color: var(--text2); display: block; margin-bottom: 5px; }
+  .text-input-group input, .text-input-group select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.83rem;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+  .text-input-group input:focus, .text-input-group select:focus { border-color: var(--accent); }
+  .text-input-group input[type=color] {
+    padding: 4px;
+    height: 36px;
+    cursor: pointer;
+  }
+  .color-row { display: flex; gap: 8px; align-items: center; }
+  .color-row input[type=color] { width: 48px; flex-shrink: 0; }
+  .color-row input[type=text] { flex: 1; }
 
-/* ANGLE */
-.angle-row {
-  display: flex; align-items: center; gap: 10px;
-}
-.angle-dial {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border);
-  position: relative;
-  cursor: pointer;
-  flex-shrink: 0;
-  background: var(--surface2);
-  transition: border-color 0.15s;
-}
-.angle-dial:hover { border-color: rgba(255,255,255,0.3); }
-.angle-needle {
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 2px; height: 14px;
-  background: var(--accent);
-  border-radius: 1px;
-  transform-origin: bottom center;
-  transform: translateX(-50%) translateY(-100%);
-}
-.angle-val {
-  font-family: 'Syne Mono', monospace;
-  font-size: 22px; font-weight: 700;
-  color: var(--ink);
-}
-.angle-label {
-  font-family: 'Syne Mono', monospace;
-  font-size: 9px; color: var(--ink2);
-  letter-spacing: 0.1em;
-}
-#angleSlider {
-  flex: 1;
-  -webkit-appearance: none;
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-#angleSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--bg);
-  cursor: pointer;
-}
+  /* CROP OVERLAY */
+  #cropOverlay {
+    position: fixed;
+    border: 2px solid var(--accent);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    cursor: crosshair;
+    display: none;
+    pointer-events: none;
+    z-index: 50;
+  }
+  #cropOverlay .crop-handle {
+    position: absolute;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
 
-/* ANIMATION */
-.anim-grid {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.anim-btn {
-  padding: 9px 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--ink2);
-  font-family: 'Syne Mono', monospace;
-  font-size: 9px; letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: all 0.15s;
-  text-align: center;
-}
-.anim-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--ink); }
-.anim-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,77,28,0.08); }
+  /* EXPORT */
+  .export-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .export-row select {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.83rem;
+    outline: none;
+  }
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    letter-spacing: 0.5px;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-secondary {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-top: 8px;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent2); }
 
-/* SPEED */
-.slider-row { display: flex; flex-direction: column; gap: 6px; }
-.slider-header { display: flex; justify-content: space-between; }
-.slider-name { font-size: 11px; font-weight: 700; }
-.slider-val { font-family: 'Syne Mono', monospace; font-size: 10px; color: var(--accent); }
-.full-slider {
-  -webkit-appearance: none;
-  width: 100%; height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-.full-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background: var(--ink);
-  border: 2px solid var(--bg);
-  cursor: pointer;
-}
+  /* INFO BADGE */
+  .info-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    color: var(--text3);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+  .info-badge strong { color: var(--accent2); }
 
-/* UPLOAD */
-.upload-zone {
-  border: 1.5px dashed var(--border);
-  border-radius: 6px;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  background: var(--surface2);
-}
-.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(255,77,28,0.05); }
-.upload-icon { font-size: 24px; margin-bottom: 8px; }
-.upload-text { font-size: 12px; font-weight: 700; }
-.upload-sub { font-family: 'Syne Mono', monospace; font-size: 9px; color: var(--ink2); margin-top: 4px; letter-spacing: 0.1em; }
-#imgInput { display: none; }
+  /* TABS */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 18px;
+    gap: 0;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 14px;
+    color: var(--text3);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text2); }
+  .tab-btn.active { color: var(--accent2); border-bottom-color: var(--accent); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 
-/* EXTRACTED PALETTE */
-.palette-row {
-  display: flex; gap: 6px; flex-wrap: wrap;
-}
-.pal-swatch {
-  width: 36px; height: 36px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: transform 0.15s, border-color 0.15s;
-  position: relative;
-}
-.pal-swatch:hover { transform: scale(1.15); }
-.pal-swatch.selected { border-color: #fff; }
-.pal-empty {
-  font-family: 'Syne Mono', monospace;
-  font-size: 10px; color: var(--ink2);
-  letter-spacing: 0.1em;
-}
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
 
-/* PRESETS */
-.preset-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 6px;
-}
-.preset-item {
-  aspect-ratio: 16/9;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: transform 0.15s, border-color 0.15s;
-}
-.preset-item:hover { transform: scale(1.05); }
-.preset-item.active { border-color: var(--accent); }
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    font-size: 0.85rem;
+    color: var(--text);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    box-shadow: var(--shadow);
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--success); color: var(--success); }
 
-/* CANVAS SIZE */
-.size-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.size-btn {
-  padding: 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--ink2);
-  font-family: 'Syne Mono', monospace;
-  font-size: 9px; letter-spacing: 0.06em;
-  cursor: pointer; text-align: center;
-  transition: all 0.15s;
-}
-.size-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--ink); }
-.size-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,77,28,0.08); }
+  /* LOADING */
+  .loading-bar {
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 99px;
+    animation: loadingAnim 1.5s ease infinite;
+    display: none;
+  }
+  @keyframes loadingAnim {
+    0% { width: 0%; margin-left: 0; }
+    50% { width: 70%; margin-left: 15%; }
+    100% { width: 0%; margin-left: 100%; }
+  }
 
-/* NOISE TOGGLE */
-.toggle-row { display: flex; align-items: center; justify-content: space-between; }
-.toggle-label { font-size: 12px; font-weight: 700; }
-.toggle {
-  width: 40px; height: 22px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 11px;
-  position: relative;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.toggle.on { background: var(--accent); border-color: var(--accent); }
-.toggle-knob {
-  position: absolute;
-  top: 3px; left: 3px;
-  width: 14px; height: 14px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s;
-}
-.toggle.on .toggle-knob { transform: translateX(18px); }
+  /* CANVAS INFO */
+  .canvas-info {
+    margin-top: 12px;
+    font-size: 0.75rem;
+    color: var(--text3);
+  }
+
+  /* VIDEO SCRUBBER */
+  .scrubber-wrap { margin-top: 10px; }
+  .scrubber-wrap label { font-size: 0.78rem; color: var(--text2); display: block; margin-bottom: 6px; }
+  .frame-count-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .frame-count-row input[type=number] {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.83rem;
+    outline: none;
+  }
+  .btn-sm {
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    color: white;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+  .btn-sm:hover { opacity: 0.85; }
+
+  /* hidden video for processing */
+  #hiddenVideo { display: none; }
+  #hiddenCanvas { display: none; }
+
+  /* CROP MODE */
+  .panel-center.crop-mode #mainCanvas { cursor: crosshair; }
+  
+  /* Text position buttons */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .pos-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px;
+    cursor: pointer;
+    font-size: 0.65rem;
+    color: var(--text3);
+    text-align: center;
+    transition: all var(--transition);
+  }
+  .pos-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .pos-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+  @media (max-width: 900px) {
+    .panel-left, .panel-right { width: 240px; min-width: 220px; }
+  }
+
+  /* VIDEO PLAYER */
+  .video-player-wrap {
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #000;
+    aspect-ratio: 16/9;
+    width: 100%;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  #previewVideo {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: contain;
+    background: #000;
+  }
+  .video-controls { display: flex; flex-direction: column; gap: 8px; }
+  .video-scrubber-row { display: flex; align-items: center; gap: 8px; }
+  .video-time {
+    font-size: 0.72rem;
+    color: var(--text3);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    min-width: 72px;
+    text-align: right;
+  }
+  .capture-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .capture-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .capture-btn:active { transform: translateY(0); }
+  .video-play-row { display: flex; gap: 6px; align-items: center; }
+  .vbtn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text2);
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--transition);
+    line-height: 1;
+  }
+  .vbtn:hover { background: var(--bg4); color: var(--text); }
+  .saved-frames-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    margin-top: 12px;
+    margin-bottom: 8px;
+  }
 </style>
 </head>
 <body>
 
-<a href="/" class="back-btn">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-    <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
-  </svg>
-  Späť na portál
-</a>
+<video id="hiddenVideo" style="display:none;"></video>
+<canvas id="hiddenCanvas" style="display:none;"></canvas>
 
-<div class="app">
+<header>
+  <div class="logo">Thumbify</div>
+  <div class="header-actions">
+    <!-- Language switch SK / EN -->
+    <div class="pill-switch" id="langSwitch" onclick="toggleLang()">
+      <div class="pill-track" id="langTrack">
+        <div class="pill-thumb" id="langThumb"></div>
+        <div class="pill-option active" id="langOptSK">SK</div>
+        <div class="pill-option inactive" id="langOptEN">EN</div>
+      </div>
+    </div>
+    <!-- Theme switch Dark / Light -->
+    <div class="pill-switch" id="themeSwitch" onclick="toggleTheme()">
+      <div class="pill-track" id="themeTrack">
+        <div class="pill-thumb" id="themeThumb"></div>
+        <div class="pill-option active" id="themeOptDark">🌙 Dark</div>
+        <div class="pill-option inactive" id="themeOptLight">☀️ Light</div>
+      </div>
+    </div>
+    <a href="http://127.0.0.1:5000" class="back-btn">← <span data-i18n="backToPortal">Späť na portál</span></a>
+  </div>
+</header>
 
-  <!-- PREVIEW -->
-  <div class="preview">
-    <canvas id="gradCanvas"></canvas>
-    <div class="preview-overlay"></div>
-    <div class="logo-overlay">GRADFLOW</div>
-    <div class="preview-badge" id="previewBadge">1920 × 1080</div>
-    <button class="download-btn" onclick="downloadGradient()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-      </svg>
-      Stiahnuť PNG
-    </button>
+<main>
+  <!-- LEFT PANEL: Source & Video Frames -->
+  <div class="panel-left">
+    <div class="panel-section">
+      <div class="panel-title" data-i18n="source">Zdroj</div>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text"><strong data-i18n="uploadClick">Klikni alebo pretiahni</strong><br><span data-i18n="uploadFormats">Obrázok: JPG, PNG, WebP<br>Video: MP4, WebM</span></div>
+      </div>
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm">
+      <div class="loading-bar" id="loadingBar" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="panel-section" id="videoSection" style="display:none;">
+      <div class="panel-title" data-i18n="videoFrames">Video</div>
+
+      <!-- Inline preview player -->
+      <div class="video-player-wrap">
+        <video id="previewVideo" preload="auto"></video>
+      </div>
+
+      <div class="video-controls">
+        <!-- Play/Pause + time -->
+        <div class="video-play-row">
+          <button class="vbtn" id="playPauseBtn" onclick="togglePlayPause()">▶</button>
+          <button class="vbtn" id="stepBackBtn" title="-1 frame">◀</button>
+          <button class="vbtn" id="stepFwdBtn" title="+1 frame">▶</button>
+          <span class="video-time" id="videoTimeDisplay">0:00 / 0:00</span>
+        </div>
+        <!-- Scrubber -->
+        <div class="video-scrubber-row">
+          <input type="range" id="videoScrubber" min="0" max="1000" value="0"
+            oninput="scrubVideo(this.value)"
+            style="flex:1;">
+        </div>
+        <!-- Capture button -->
+        <button class="capture-btn" onclick="captureCurrentFrame()">
+          📸 <span data-i18n="captureFrame">Zachytiť frame</span>
+        </button>
+      </div>
+
+      <!-- Saved frames strip -->
+      <div id="savedFramesWrap" style="display:none;">
+        <div class="saved-frames-title" data-i18n="savedFrames">Zachytené framy</div>
+        <div class="frames-grid" id="framesGrid"></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="panel-title" data-i18n="info">Info</div>
+      <div class="info-badge">
+        <strong data-i18n="outputSize">Výstup:</strong> <span data-i18n="outputDesc">1280 × 720 px (YouTube štandard)</span><br>
+        <span data-i18n="infoTip">Thumbnail sa automaticky prispôsobí formátu.</span>
+      </div>
+    </div>
   </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
+  <!-- CENTER: Canvas -->
+  <div class="panel-center" id="panelCenter">
+    <div class="canvas-placeholder" id="canvasPlaceholder">
+      <div class="big-icon">🎬</div>
+      <p data-i18n="placeholderText">Nahraj obrázok alebo video a začni tvoriť thumbnail pre YouTube.</p>
+    </div>
+    <div class="canvas-wrapper" id="canvasWrapper" style="display:none; position:relative;">
+      <canvas id="mainCanvas"></canvas>
+    </div>
+    <div id="cropOverlay"></div>
+    <div class="canvas-toolbar" id="canvasToolbar" style="display:none;">
+      <!-- Undo / Redo -->
+      <button class="tool-btn" id="toolUndo" onclick="undo()" title="Krok späť">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 6h7a4 4 0 0 1 0 8H5"/><polyline points="2,3 2,6 5,6"/>
+        </svg>
+      </button>
+      <button class="tool-btn" id="toolRedo" onclick="redo()" title="Krok dopredu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 6H7a4 4 0 0 0 0 8h4"/><polyline points="14,3 14,6 11,6"/>
+        </svg>
+      </button>
+      <div class="toolbar-sep"></div>
+      <!-- Crop -->
+      <button class="tool-btn" id="toolCrop" onclick="activateTool('crop')" title="Orezať">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M4 1v10h10"/><path d="M1 4h10v10"/><line x1="4" y1="4" x2="11" y2="11"/>
+        </svg>
+      </button>
+      <!-- Rotate Left -->
+      <button class="tool-btn" id="toolRotateL" onclick="pushHistory(); rotateCanvas(-90)" title="Otočiť doľava">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 9A5.5 5.5 0 1 0 5 4.5"/><polyline points="1,2 5,4.5 2.5,7.5"/>
+        </svg>
+      </button>
+      <!-- Rotate Right -->
+      <button class="tool-btn" id="toolRotateR" onclick="pushHistory(); rotateCanvas(90)" title="Otočiť doprava">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12.5 9A5.5 5.5 0 1 1 11 4.5"/><polyline points="15,2 11,4.5 13.5,7.5"/>
+        </svg>
+      </button>
+      <!-- Flip Horizontal -->
+      <button class="tool-btn" id="toolFlipH" onclick="pushHistory(); flipCanvas('h')" title="Prehodiť horizontálne">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="8" y1="1" x2="8" y2="15" stroke-dasharray="2 2"/>
+          <polyline points="5,4 1,8 5,12"/><polyline points="11,4 15,8 11,12"/>
+        </svg>
+      </button>
+      <!-- Flip Vertical -->
+      <button class="tool-btn" id="toolFlipV" onclick="pushHistory(); flipCanvas('v')" title="Prehodiť vertikálne">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="1" y1="8" x2="15" y2="8" stroke-dasharray="2 2"/>
+          <polyline points="4,5 8,1 12,5"/><polyline points="4,11 8,15 12,11"/>
+        </svg>
+      </button>
+      <div class="toolbar-sep"></div>
+      <!-- Reset -->
+      <button class="tool-btn" id="toolReset" onclick="undo('all')" title="Resetovať všetko">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13.5 8A5.5 5.5 0 1 1 10 3.07"/><polyline points="10,1 13.5,3 11,6"/>
+        </svg>
+      </button>
+    </div>
+    <div class="canvas-info" id="canvasInfo"></div>
+  </div>
 
-    <div class="sidebar-header">
-      <div class="app-name">GRAD<span>FLOW</span></div>
-      <div class="app-sub">Gradient Studio / MM</div>
+  <!-- RIGHT PANEL: Adjustments & Export -->
+  <div class="panel-right">
+    <!-- Tabs -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('adjust')" id="tabAdjust" data-i18n="tabAdjust">Úpravy</button>
+      <button class="tab-btn" onclick="switchTab('filters')" id="tabFilters" data-i18n="tabFilters">Filtre</button>
+      <button class="tab-btn" onclick="switchTab('text')" id="tabText" data-i18n="tabText">Text</button>
     </div>
 
-    <!-- COLOR STOPS -->
-    <div class="panel">
-      <div class="panel-label">Farby</div>
-      <div class="color-stops" id="colorStops"></div>
-      <button class="add-stop-btn" onclick="addStop()">+ Pridať farbu</button>
-    </div>
-
-    <!-- TYPE -->
-    <div class="panel">
-      <div class="panel-label">Typ gradientu</div>
-      <div class="type-grid">
-        <button class="type-btn active" id="t-linear" onclick="setType('linear')">Lineárny</button>
-        <button class="type-btn" id="t-radial" onclick="setType('radial')">Radiálny</button>
-        <button class="type-btn" id="t-conic" onclick="setType('conic')">Kónický</button>
-        <button class="type-btn" id="t-mesh" onclick="setType('mesh')">Mesh</button>
-        <button class="type-btn" id="t-diamond" onclick="setType('diamond')">Diamond</button>
-        <button class="type-btn" id="t-spiral" onclick="setType('spiral')">Špirálovitý</button>
-      </div>
-    </div>
-
-    <!-- ANGLE -->
-    <div class="panel" id="anglePanel">
-      <div class="panel-label">Uhol</div>
-      <div class="angle-row">
-        <div class="angle-dial" id="angleDial">
-          <div class="angle-needle" id="angleNeedle"></div>
+    <!-- ADJUST TAB -->
+    <div id="adjustTab" class="tab-content active">
+      <div class="panel-section">
+        <div class="panel-title" data-i18n="basicAdjust">Základné úpravy</div>
+        <div class="slider-group">
+          <div class="slider-label"><span data-i18n="brightness">Jas</span> <span id="brightnessVal">0</span></div>
+          <input type="range" id="brightness" min="-100" max="100" value="0" oninput="updateAdjust()">
         </div>
-        <div>
-          <div class="angle-val" id="angleDisplay">135°</div>
-          <div class="angle-label">stupeň</div>
+        <div class="slider-group">
+          <div class="slider-label"><span data-i18n="contrast">Kontrast</span> <span id="contrastVal">0</span></div>
+          <input type="range" id="contrast" min="-100" max="100" value="0" oninput="updateAdjust()">
         </div>
-        <input type="range" id="angleSlider" min="0" max="360" value="135" style="flex:1"/>
+        <div class="slider-group">
+          <div class="slider-label"><span data-i18n="saturation">Saturácia</span> <span id="saturationVal">0</span></div>
+          <input type="range" id="saturation" min="-100" max="100" value="0" oninput="updateAdjust()">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span data-i18n="sharpness">Ostrosť</span> <span id="sharpnessVal">0</span></div>
+          <input type="range" id="sharpness" min="0" max="10" value="0" oninput="updateAdjust()">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span data-i18n="blur">Blur</span> <span id="blurVal">0</span></div>
+          <input type="range" id="blur" min="0" max="10" value="0" oninput="updateAdjust()">
+        </div>
+        <div class="slider-group">
+          <div class="slider-label"><span data-i18n="vignette">Vignette</span> <span id="vignetteVal">0</span></div>
+          <input type="range" id="vignette" min="0" max="100" value="0" oninput="updateAdjust()">
+        </div>
       </div>
     </div>
 
-    <!-- ANIMATION -->
-    <div class="panel">
-      <div class="panel-label">Animácia</div>
-      <div class="anim-grid">
-        <button class="anim-btn active" id="a-none" onclick="setAnim('none')">Žiadna</button>
-        <button class="anim-btn" id="a-flow" onclick="setAnim('flow')">Flow</button>
-        <button class="anim-btn" id="a-pulse" onclick="setAnim('pulse')">Pulse</button>
-        <button class="anim-btn" id="a-rotate" onclick="setAnim('rotate')">Rotate</button>
-        <button class="anim-btn" id="a-wave" onclick="setAnim('wave')">Wave</button>
-        <button class="anim-btn" id="a-breath" onclick="setAnim('breath')">Breath</button>
+    <!-- FILTERS TAB -->
+    <div id="filtersTab" class="tab-content">
+      <div class="panel-section">
+        <div class="panel-title" data-i18n="quickFilters">Rýchle filtre</div>
+        <div class="filters-grid" id="filtersGrid"></div>
       </div>
-      <div style="margin-top:12px">
-        <div class="slider-row">
-          <div class="slider-header">
-            <span class="slider-name">Rýchlosť</span>
-            <span class="slider-val" id="speedVal">1.0×</span>
+    </div>
+
+    <!-- TEXT TAB -->
+    <div id="textTab" class="tab-content">
+      <div class="panel-section">
+        <div class="panel-title" data-i18n="textOverlay">Text Overlay</div>
+        <div class="text-input-group">
+          <label data-i18n="textContent">Text</label>
+          <input type="text" id="textContent" placeholder="Tvoj titulok..." oninput="updateTextOverlay()">
+        </div>
+        <div class="text-input-group">
+          <label data-i18n="fontSize">Veľkosť písma</label>
+          <input type="range" id="fontSize" min="20" max="120" value="60" oninput="updateTextOverlay(); document.getElementById('fontSizeVal').textContent=this.value+'px'">
+          <div style="text-align:right; font-size:0.75rem; color:var(--text3); margin-top:3px;"><span id="fontSizeVal">60px</span></div>
+        </div>
+        <div class="text-input-group">
+          <label data-i18n="fontFamily">Font</label>
+          <select id="fontFamily" onchange="updateTextOverlay()">
+            <option value="Syne">Syne (Bold)</option>
+            <option value="Impact">Impact</option>
+            <option value="Georgia">Georgia</option>
+            <option value="Arial">Arial</option>
+            <option value="Courier New">Courier New</option>
+          </select>
+        </div>
+        <div class="text-input-group">
+          <label data-i18n="textColor">Farba textu</label>
+          <div class="color-row">
+            <input type="color" id="textColor" value="#ffffff" oninput="updateTextOverlay()">
+            <input type="text" id="textColorHex" value="#ffffff" oninput="syncColorFromText()">
           </div>
-          <input type="range" class="full-slider" id="speedSlider" min="1" max="20" value="5"/>
         </div>
-      </div>
-    </div>
-
-    <!-- NOISE -->
-    <div class="panel">
-      <div class="toggle-row">
-        <span class="toggle-label">Grain / Šum</span>
-        <div class="toggle" id="noiseToggle" onclick="toggleNoise()"><div class="toggle-knob"></div></div>
-      </div>
-      <div style="margin-top:12px" id="noiseControls" class="slider-row" style="display:none">
-        <div class="slider-header">
-          <span class="slider-name">Intenzita</span>
-          <span class="slider-val" id="noiseVal">20%</span>
+        <div class="text-input-group">
+          <label data-i18n="textShadow">Tiene / Outline</label>
+          <select id="textShadow" onchange="updateTextOverlay()">
+            <option value="none" data-i18n="shadowNone">Žiadny</option>
+            <option value="shadow" data-i18n="shadowSoft">Mäkký tieň</option>
+            <option value="outline" data-i18n="shadowOutline">Čierny outline</option>
+            <option value="glow" data-i18n="shadowGlow">Svietiaci efekt</option>
+          </select>
         </div>
-        <input type="range" class="full-slider" id="noiseSlider" min="1" max="60" value="20"/>
-      </div>
-    </div>
-
-    <!-- UPLOAD + EXTRACT -->
-    <div class="panel">
-      <div class="panel-label">Extrahovať z fotky</div>
-      <div class="upload-zone" id="uploadZone">
-        <div class="upload-icon">🖼</div>
-        <div class="upload-text">Nahrať obrázok</div>
-        <div class="upload-sub">PNG, JPG, WEBP</div>
-        <input type="file" id="imgInput" accept="image/*"/>
-      </div>
-      <div style="margin-top:10px">
-        <div class="panel-label">Extrahovaná paleta</div>
-        <div class="palette-row" id="paletteRow">
-          <div class="pal-empty">Nahraj obrázok →</div>
+        <div class="text-input-group">
+          <label data-i18n="textPosition">Pozícia</label>
+          <div class="pos-grid">
+            <button class="pos-btn" data-pos="top-left" onclick="setTextPos(this)" data-i18n="posTopLeft">↖ Vľavo</button>
+            <button class="pos-btn active" data-pos="top-center" onclick="setTextPos(this)" data-i18n="posTop">↑ Hore</button>
+            <button class="pos-btn" data-pos="top-right" onclick="setTextPos(this)" data-i18n="posTopRight">↗ Vpravo</button>
+            <button class="pos-btn" data-pos="mid-left" onclick="setTextPos(this)" data-i18n="posMidLeft">← Stred</button>
+            <button class="pos-btn" data-pos="center" onclick="setTextPos(this)" data-i18n="posCenter">⊕ Centrum</button>
+            <button class="pos-btn" data-pos="mid-right" onclick="setTextPos(this)" data-i18n="posMidRight">Stred →</button>
+            <button class="pos-btn" data-pos="bot-left" onclick="setTextPos(this)" data-i18n="posBotLeft">↙ Dole</button>
+            <button class="pos-btn" data-pos="bottom" onclick="setTextPos(this)" data-i18n="posBot">↓ Dole</button>
+            <button class="pos-btn" data-pos="bot-right" onclick="setTextPos(this)" data-i18n="posBotRight">↘ Dole</button>
+          </div>
         </div>
+        <button class="btn-secondary" onclick="clearText()" data-i18n="clearText">Odstrániť text</button>
       </div>
     </div>
 
-    <!-- PRESETS -->
-    <div class="panel">
-      <div class="panel-label">Presets</div>
-      <div class="preset-grid" id="presetGrid"></div>
-    </div>
-
-    <!-- SIZE -->
-    <div class="panel">
-      <div class="panel-label">Rozmer exportu</div>
-      <div class="size-grid">
-        <button class="size-btn active" id="s-1920" onclick="setSize(1920,1080)">1920×1080</button>
-        <button class="size-btn" id="s-2560" onclick="setSize(2560,1440)">2560×1440</button>
-        <button class="size-btn" id="s-3840" onclick="setSize(3840,2160)">3840×2160</button>
-        <button class="size-btn" id="s-1080" onclick="setSize(1080,1080)">1080×1080</button>
-        <button class="size-btn" id="s-1350" onclick="setSize(1080,1350)">1080×1350</button>
-        <button class="size-btn" id="s-1920v" onclick="setSize(1080,1920)">1080×1920</button>
+    <!-- EXPORT (always visible at bottom) -->
+    <div class="panel-section" style="margin-top:auto; border-top: 1px solid var(--border); border-bottom: none;">
+      <div class="panel-title" data-i18n="export">Export</div>
+      <div class="export-row">
+        <select id="exportFormat">
+          <option value="png">PNG</option>
+          <option value="jpeg">JPG</option>
+        </select>
+        <select id="exportQuality">
+          <option value="1">100%</option>
+          <option value="0.9" selected>90%</option>
+          <option value="0.75">75%</option>
+        </select>
       </div>
+      <button class="btn-primary" onclick="exportImage()" data-i18n="downloadBtn">⬇ Stiahnuť Thumbnail</button>
+      <button class="btn-secondary" onclick="copyToClipboard()" data-i18n="copyBtn">📋 Kopírovať do schránky</button>
     </div>
-
   </div>
-</div>
+</main>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ─── STATE ────────────────────────────────────────────────────────
-let stops = [
-  { color: '#ff4d1c', pos: 0 },
-  { color: '#ff9a3c', pos: 0.5 },
-  { color: '#ffef62', pos: 1 },
-];
-let gradType = 'linear';
-let angle = 135;
-let animType = 'none';
-let animSpeed = 5;
-let noiseOn = false;
-let noiseAmount = 20;
-let exportW = 1920, exportH = 1080;
-let animFrame = 0;
-let rafId;
-
-const canvas = document.getElementById('gradCanvas');
-const ctx = canvas.getContext('2d');
-
-// ─── PRESETS ──────────────────────────────────────────────────────
-const PRESETS = [
-  { name: 'Sunset', stops: [{color:'#ff416c',pos:0},{color:'#ff4b2b',pos:1}] },
-  { name: 'Ocean', stops: [{color:'#2193b0',pos:0},{color:'#6dd5ed',pos:1}] },
-  { name: 'Forest', stops: [{color:'#134e5e',pos:0},{color:'#71b280',pos:1}] },
-  { name: 'Candy', stops: [{color:'#f953c6',pos:0},{color:'#b91d73',pos:1}] },
-  { name: 'Gold', stops: [{color:'#f7971e',pos:0},{color:'#ffd200',pos:1}] },
-  { name: 'Night', stops: [{color:'#0f0c29',pos:0},{color:'#302b63',pos:0.5},{color:'#24243e',pos:1}] },
-  { name: 'Peach', stops: [{color:'#ed4264',pos:0},{color:'#ffedbc',pos:1}] },
-  { name: 'Aurora', stops: [{color:'#00c3ff',pos:0},{color:'#77e190',pos:0.5},{color:'#ffff1c',pos:1}] },
-  { name: 'Dusk', stops: [{color:'#2c3e50',pos:0},{color:'#fd746c',pos:1}] },
-];
-
-// ─── INIT ─────────────────────────────────────────────────────────
-function init() {
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-  buildStopsUI();
-  buildPresets();
-  setupAngle();
-  setupUpload();
-  setupSliders();
-  render();
-}
-
-function resizeCanvas() {
-  const preview = canvas.parentElement;
-  canvas.width = preview.clientWidth;
-  canvas.height = preview.clientHeight;
-}
-
-// ─── CANVAS RESIZE OBSERVER ───────────────────────────────────────
-new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
-
-// ─── RENDER ───────────────────────────────────────────────────────
-function render() {
-  rafId = requestAnimationFrame(render);
-  animFrame += 0.003 * animSpeed;
-  drawGradient(ctx, canvas.width, canvas.height);
-}
-
-function drawGradient(targetCtx, w, h) {
-  const s = computeAnimatedStops();
-  const a = computeAnimatedAngle();
-
-  targetCtx.clearRect(0, 0, w, h);
-
-  let grad;
-
-  if (gradType === 'linear') {
-    const rad = (a * Math.PI) / 180;
-    const len = Math.sqrt(w*w + h*h) / 2;
-    const cx = w/2, cy = h/2;
-    grad = targetCtx.createLinearGradient(
-      cx - Math.cos(rad)*len, cy - Math.sin(rad)*len,
-      cx + Math.cos(rad)*len, cy + Math.sin(rad)*len
-    );
-    applyStops(grad, s);
-    targetCtx.fillStyle = grad;
-    targetCtx.fillRect(0, 0, w, h);
-
-  } else if (gradType === 'radial') {
-    const pulse = animType === 'pulse' ? 0.7 + Math.sin(animFrame)*0.3 : 1;
-    grad = targetCtx.createRadialGradient(w/2, h/2, 0, w/2, h/2, Math.max(w,h)/2 * pulse);
-    applyStops(grad, s);
-    targetCtx.fillStyle = grad;
-    targetCtx.fillRect(0, 0, w, h);
-
-  } else if (gradType === 'conic') {
-    // Simulate conic with canvas arc sweep
-    const cx = w/2, cy = h/2;
-    const r = Math.sqrt(w*w+h*h);
-    const segs = 360;
-    for (let i = 0; i < segs; i++) {
-      const t = i / segs;
-      const ang1 = (t * Math.PI * 2) + (a * Math.PI/180);
-      const ang2 = ang1 + (Math.PI * 2 / segs);
-      targetCtx.beginPath();
-      targetCtx.moveTo(cx, cy);
-      targetCtx.arc(cx, cy, r, ang1, ang2);
-      targetCtx.closePath();
-      targetCtx.fillStyle = interpolateStops(s, t);
-      targetCtx.fill();
-    }
-
-  } else if (gradType === 'mesh') {
-    drawMesh(targetCtx, w, h, s);
-
-  } else if (gradType === 'diamond') {
-    drawDiamond(targetCtx, w, h, s);
-
-  } else if (gradType === 'spiral') {
-    drawSpiral(targetCtx, w, h, s);
+// ==================== TRANSLATIONS ====================
+const i18n = {
+  sk: {
+    source: "Zdroj", videoFrames: "Video Frames", info: "Info",
+    uploadClick: "Klikni alebo pretiahni", uploadFormats: "Obrázok: JPG, PNG, WebP\nVideo: MP4, WebM",
+    extractFrames: "Počet frameov na extrakciu:", extract: "Extrahovať",
+    outputSize: "Výstup:", outputDesc: "1280 × 720 px (YouTube štandard)",
+    infoTip: "Thumbnail sa automaticky prispôsobí formátu.",
+    placeholderText: "Nahraj obrázok alebo video a začni tvoriť thumbnail pre YouTube.",
+    tabAdjust: "Úpravy", tabFilters: "Filtre", tabText: "Text",
+    basicAdjust: "Základné úpravy", brightness: "Jas", contrast: "Kontrast",
+    saturation: "Saturácia", sharpness: "Ostrosť", blur: "Blur", vignette: "Vignette",
+    quickFilters: "Rýchle filtre", textOverlay: "Text Overlay",
+    textContent: "Text", fontSize: "Veľkosť písma", fontFamily: "Font",
+    textColor: "Farba textu", textShadow: "Tiene / Outline", textPosition: "Pozícia",
+    shadowNone: "Žiadny", shadowSoft: "Mäkký tieň", shadowOutline: "Čierny outline", shadowGlow: "Svietiaci efekt",
+    posTopLeft: "↖", posTop: "↑ Hore", posTopRight: "↗",
+    posMidLeft: "← Stred", posCenter: "⊕ Centrum", posMidRight: "Stred →",
+    posBotLeft: "↙", posBot: "↓ Dole", posBotRight: "↘",
+    clearText: "Odstrániť text",
+    export: "Export", downloadBtn: "⬇ Stiahnuť Thumbnail", copyBtn: "📋 Kopírovať do schránky",
+    backToPortal: "Späť na portál", light: "Svetlý",
+    toastDownloaded: "✅ Thumbnail stiahnutý!",
+    toastCopied: "📋 Skopírované do schránky!",
+    toastCopyFail: "Kopírovanie nie je podporované v tomto prehliadači.",
+    toastLoading: "⏳ Načítavam video...",
+    toastFramesDone: "✅ Frame zachytený!",
+    captureFrame: "Zachytiť frame",
+    savedFrames: "Zachytené framy",
+    toastImageLoaded: "✅ Obrázok načítaný!",
+    canvasInfo: "1280 × 720 px | YouTube Thumbnail",
+    filterNone: "Pôvodný", filterVivid: "Živý", filterCinema: "Kino",
+    filterCold: "Studený", filterBW: "Čiernobiely", filterSepia: "Sépia",
+    filterInvert: "Inverzia", filterWarm: "Teplý", filterFade: "Fade",
+  },
+  en: {
+    source: "Source", videoFrames: "Video Frames", info: "Info",
+    uploadClick: "Click or drag & drop", uploadFormats: "Image: JPG, PNG, WebP\nVideo: MP4, WebM",
+    extractFrames: "Frames to extract:", extract: "Extract",
+    outputSize: "Output:", outputDesc: "1280 × 720 px (YouTube standard)",
+    infoTip: "Thumbnail is automatically fitted to format.",
+    placeholderText: "Upload an image or video and start creating your YouTube thumbnail.",
+    tabAdjust: "Adjust", tabFilters: "Filters", tabText: "Text",
+    basicAdjust: "Basic Adjustments", brightness: "Brightness", contrast: "Contrast",
+    saturation: "Saturation", sharpness: "Sharpness", blur: "Blur", vignette: "Vignette",
+    quickFilters: "Quick Filters", textOverlay: "Text Overlay",
+    textContent: "Text", fontSize: "Font Size", fontFamily: "Font",
+    textColor: "Text Color", textShadow: "Shadow / Outline", textPosition: "Position",
+    shadowNone: "None", shadowSoft: "Soft Shadow", shadowOutline: "Black Outline", shadowGlow: "Glow Effect",
+    posTopLeft: "↖", posTop: "↑ Top", posTopRight: "↗",
+    posMidLeft: "← Mid", posCenter: "⊕ Center", posMidRight: "Mid →",
+    posBotLeft: "↙", posBot: "↓ Bottom", posBotRight: "↘",
+    clearText: "Remove Text",
+    export: "Export", downloadBtn: "⬇ Download Thumbnail", copyBtn: "📋 Copy to Clipboard",
+    backToPortal: "Back to Portal", light: "Light",
+    toastDownloaded: "✅ Thumbnail downloaded!",
+    toastCopied: "📋 Copied to clipboard!",
+    toastCopyFail: "Copy not supported in this browser.",
+    toastLoading: "⏳ Loading video...",
+    toastFramesDone: "✅ Frame captured!",
+    captureFrame: "Capture frame",
+    savedFrames: "Saved frames",
+    toastImageLoaded: "✅ Image loaded!",
+    canvasInfo: "1280 × 720 px | YouTube Thumbnail",
+    filterNone: "Original", filterVivid: "Vivid", filterCinema: "Cinema",
+    filterCold: "Cold", filterBW: "B&W", filterSepia: "Sepia",
+    filterInvert: "Invert", filterWarm: "Warm", filterFade: "Fade",
   }
+};
 
-  // Noise overlay
-  if (noiseOn) {
-    applyNoise(targetCtx, w, h, noiseAmount / 100);
-  }
-}
+let currentLang = 'sk';
+let currentTheme = 'dark';
 
-function drawMesh(tc, w, h, s) {
-  const t = animFrame;
-  // Multi-layer radial gradients at animated positions
-  tc.fillStyle = '#000';
-  tc.fillRect(0,0,w,h);
-  const points = [
-    { x: w*(0.2+Math.sin(t*0.7)*0.15), y: h*(0.2+Math.cos(t*0.5)*0.15) },
-    { x: w*(0.8+Math.cos(t*0.6)*0.12), y: h*(0.3+Math.sin(t*0.8)*0.12) },
-    { x: w*(0.5+Math.sin(t*0.4)*0.2),  y: h*(0.7+Math.cos(t*0.9)*0.15) },
-    { x: w*(0.3+Math.cos(t*0.9)*0.1),  y: h*(0.6+Math.sin(t*0.3)*0.2)  },
-    { x: w*(0.7+Math.sin(t*0.5)*0.15), y: h*(0.8+Math.cos(t*0.6)*0.1)  },
-  ];
-  tc.globalCompositeOperation = 'screen';
-  points.forEach((p, i) => {
-    const c = s[i % s.length].color;
-    const rg = tc.createRadialGradient(p.x, p.y, 0, p.x, p.y, Math.max(w,h)*0.55);
-    rg.addColorStop(0, c + 'cc');
-    rg.addColorStop(1, '#00000000');
-    tc.fillStyle = rg;
-    tc.fillRect(0,0,w,h);
+function t(key) { return i18n[currentLang][key] || key; }
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (i18n[currentLang][key]) el.textContent = i18n[currentLang][key];
   });
-  tc.globalCompositeOperation = 'source-over';
+  document.getElementById('canvasInfo').textContent = hasImage ? t('canvasInfo') : '';
+  buildFiltersGrid();
 }
 
-function drawDiamond(tc, w, h, s) {
-  const cx = w/2, cy = h/2;
-  const maxD = Math.max(w,h);
-  const steps = 80;
-  for (let i = steps; i >= 0; i--) {
-    const t = i / steps;
-    const at = animType === 'pulse' ? (t + animFrame * 0.1) % 1 : t;
-    const size = at * maxD;
-    tc.save();
-    tc.translate(cx, cy);
-    tc.rotate((angle * Math.PI / 180) + (animType === 'rotate' ? animFrame * 0.2 : 0));
-    tc.beginPath();
-    tc.moveTo(0, -size/2);
-    tc.lineTo(size/2, 0);
-    tc.lineTo(0, size/2);
-    tc.lineTo(-size/2, 0);
-    tc.closePath();
-    tc.fillStyle = interpolateStops(s, 1 - t);
-    tc.fill();
-    tc.restore();
-  }
-}
-
-function drawSpiral(tc, w, h, s) {
-  const cx = w/2, cy = h/2;
-  const maxR = Math.sqrt(w*w+h*h)/2;
-  const turns = 4;
-  const steps = 1200;
-  tc.fillStyle = s[0].color;
-  tc.fillRect(0,0,w,h);
-  for (let i = 0; i < steps; i++) {
-    const t = i / steps;
-    const r = t * maxR;
-    const a2 = t * turns * Math.PI * 2 + (angle * Math.PI/180) + animFrame;
-    const x = cx + Math.cos(a2) * r;
-    const y = cy + Math.sin(a2) * r;
-    tc.beginPath();
-    tc.arc(x, y, r/steps * maxR * 0.018 + 1, 0, Math.PI*2);
-    tc.fillStyle = interpolateStops(s, t);
-    tc.fill();
-  }
-}
-
-function applyNoise(tc, w, h, amount) {
-  const imgData = tc.getImageData(0, 0, w, h);
-  const d = imgData.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const n = (Math.random() - 0.5) * 255 * amount;
-    d[i]   = Math.max(0, Math.min(255, d[i]   + n));
-    d[i+1] = Math.max(0, Math.min(255, d[i+1] + n));
-    d[i+2] = Math.max(0, Math.min(255, d[i+2] + n));
-  }
-  tc.putImageData(imgData, 0, 0);
-}
-
-function computeAnimatedStops() {
-  if (animType === 'flow') {
-    return stops.map(s => ({
-      color: s.color,
-      pos: ((s.pos + animFrame * 0.05) % 1 + 1) % 1,
-    })).sort((a,b) => a.pos - b.pos);
-  }
-  return stops;
-}
-
-function computeAnimatedAngle() {
-  if (animType === 'rotate') return angle + animFrame * 30;
-  if (animType === 'wave') return angle + Math.sin(animFrame) * 45;
-  return angle;
-}
-
-function applyStops(grad, s) {
-  s.forEach(st => {
-    try { grad.addColorStop(Math.max(0, Math.min(1, st.pos)), st.color); } catch(e){}
+function updatePillThumb(trackId, thumbId, activeIdx) {
+  const track = document.getElementById(trackId);
+  const thumb = document.getElementById(thumbId);
+  const options = track.querySelectorAll('.pill-option');
+  const active = options[activeIdx];
+  thumb.style.left = active.offsetLeft + 'px';
+  thumb.style.width = active.offsetWidth + 'px';
+  options.forEach((o, i) => {
+    o.classList.toggle('active', i === activeIdx);
+    o.classList.toggle('inactive', i !== activeIdx);
   });
 }
 
-function interpolateStops(s, t) {
-  const sorted = [...s].sort((a,b) => a.pos - b.pos);
-  if (t <= sorted[0].pos) return sorted[0].color;
-  if (t >= sorted[sorted.length-1].pos) return sorted[sorted.length-1].color;
-  for (let i = 0; i < sorted.length-1; i++) {
-    if (t >= sorted[i].pos && t <= sorted[i+1].pos) {
-      const f = (t - sorted[i].pos) / (sorted[i+1].pos - sorted[i].pos);
-      return lerpColor(sorted[i].color, sorted[i+1].color, f);
-    }
-  }
-  return sorted[0].color;
+function toggleLang() {
+  currentLang = currentLang === 'sk' ? 'en' : 'sk';
+  updatePillThumb('langTrack', 'langThumb', currentLang === 'sk' ? 0 : 1);
+  applyTranslations();
 }
 
-function lerpColor(a, b, t) {
-  const ar = parseInt(a.slice(1,3),16), ag = parseInt(a.slice(3,5),16), ab2 = parseInt(a.slice(5,7),16);
-  const br = parseInt(b.slice(1,3),16), bg = parseInt(b.slice(3,5),16), bb = parseInt(b.slice(5,7),16);
-  const r = Math.round(ar + (br-ar)*t).toString(16).padStart(2,'0');
-  const g = Math.round(ag + (bg-ag)*t).toString(16).padStart(2,'0');
-  const bl = Math.round(ab2 + (bb-ab2)*t).toString(16).padStart(2,'0');
-  return '#'+r+g+bl;
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  updatePillThumb('themeTrack', 'themeThumb', currentTheme === 'dark' ? 0 : 1);
 }
 
-// ─── STOPS UI ─────────────────────────────────────────────────────
-function buildStopsUI() {
-  const container = document.getElementById('colorStops');
-  container.innerHTML = '';
-  stops.forEach((s, i) => {
-    const row = document.createElement('div');
-    row.className = 'stop-row';
-    row.innerHTML = `
-      <div class="color-swatch" style="background:${s.color}">
-        <input type="color" value="${s.color}" oninput="updateStopColor(${i}, this.value)"/>
-      </div>
-      <input type="range" class="stop-pos" min="0" max="100" value="${Math.round(s.pos*100)}"
-        oninput="updateStopPos(${i}, this.value)"/>
-      <button class="remove-stop" onclick="removeStop(${i})">×</button>
-    `;
-    container.appendChild(row);
-  });
-}
-
-function updateStopColor(i, val) {
-  stops[i].color = val;
-  buildStopsUI();
-}
-function updateStopPos(i, val) {
-  stops[i].pos = val / 100;
-}
-function removeStop(i) {
-  if (stops.length <= 2) return;
-  stops.splice(i, 1);
-  buildStopsUI();
-}
-function addStop() {
-  const last = stops[stops.length-1];
-  const first = stops[0];
-  stops.push({ color: lerpColor(first.color, last.color, 0.5), pos: 0.5 });
-  stops.sort((a,b) => a.pos - b.pos);
-  buildStopsUI();
-}
-
-// ─── TYPE ─────────────────────────────────────────────────────────
-function setType(t) {
-  gradType = t;
-  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('t-'+t).classList.add('active');
-  document.getElementById('anglePanel').style.opacity = (t === 'radial' || t === 'mesh') ? '0.3' : '1';
-}
-
-// ─── ANGLE ────────────────────────────────────────────────────────
-function setupAngle() {
-  const slider = document.getElementById('angleSlider');
-  slider.addEventListener('input', () => {
-    angle = parseInt(slider.value);
-    document.getElementById('angleDisplay').textContent = angle + '°';
-    document.getElementById('angleNeedle').style.transform =
-      `translateX(-50%) translateY(-100%) rotate(${angle}deg)`;
-  });
-  // Dial drag
-  const dial = document.getElementById('angleDial');
-  let dragging = false;
-  dial.addEventListener('mousedown', () => dragging = true);
-  window.addEventListener('mouseup', () => dragging = false);
-  window.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const r = dial.getBoundingClientRect();
-    const cx = r.left + r.width/2, cy = r.top + r.height/2;
-    angle = Math.round((Math.atan2(e.clientY - cy, e.clientX - cx) * 180 / Math.PI) + 90 + 360) % 360;
-    document.getElementById('angleDisplay').textContent = angle + '°';
-    document.getElementById('angleSlider').value = angle;
-    document.getElementById('angleNeedle').style.transform =
-      `translateX(-50%) translateY(-100%) rotate(${angle}deg)`;
-  });
-}
-
-// ─── ANIMATION ────────────────────────────────────────────────────
-function setAnim(a) {
-  animType = a;
-  document.querySelectorAll('.anim-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('a-'+a).classList.add('active');
-}
-
-// ─── SLIDERS ──────────────────────────────────────────────────────
-function setupSliders() {
-  document.getElementById('speedSlider').addEventListener('input', function() {
-    animSpeed = parseInt(this.value);
-    document.getElementById('speedVal').textContent = (animSpeed/5).toFixed(1) + '×';
-  });
-  document.getElementById('noiseSlider').addEventListener('input', function() {
-    noiseAmount = parseInt(this.value);
-    document.getElementById('noiseVal').textContent = noiseAmount + '%';
-  });
-}
-
-// ─── NOISE ────────────────────────────────────────────────────────
-function toggleNoise() {
-  noiseOn = !noiseOn;
-  const t = document.getElementById('noiseToggle');
-  t.classList.toggle('on', noiseOn);
-  document.getElementById('noiseControls').style.display = noiseOn ? 'flex' : 'none';
-}
-
-// ─── PRESETS ──────────────────────────────────────────────────────
-function buildPresets() {
-  const grid = document.getElementById('presetGrid');
-  grid.innerHTML = '';
-  PRESETS.forEach((p, i) => {
-    const div = document.createElement('div');
-    div.className = 'preset-item';
-    div.title = p.name;
-
-    // Draw mini preview
-    const c = document.createElement('canvas');
-    c.width = 120; c.height = 68;
-    const tc = c.getContext('2d');
-    const g = tc.createLinearGradient(0, 0, 120, 0);
-    p.stops.forEach(s => g.addColorStop(s.pos, s.color));
-    tc.fillStyle = g;
-    tc.fillRect(0, 0, 120, 68);
-    div.appendChild(c);
-    div.style.overflow = 'hidden';
-    div.addEventListener('click', () => {
-      stops = p.stops.map(s => ({...s}));
-      buildStopsUI();
-      document.querySelectorAll('.preset-item').forEach(x => x.classList.remove('active'));
-      div.classList.add('active');
-    });
-    grid.appendChild(div);
-  });
-}
-
-// ─── UPLOAD + PALETTE EXTRACT ─────────────────────────────────────
-function setupUpload() {
-  const zone = document.getElementById('uploadZone');
-  const inp = document.getElementById('imgInput');
-
-  zone.addEventListener('click', () => inp.click());
-  inp.addEventListener('change', e => {
-    if (e.target.files[0]) extractColors(e.target.files[0]);
-  });
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('drag');
-    if (e.dataTransfer.files[0]) extractColors(e.dataTransfer.files[0]);
-  });
-}
-
-function extractColors(file) {
-  const img = new Image();
-  const url = URL.createObjectURL(file);
-  img.onload = () => {
-    // Sample pixels
-    const c = document.createElement('canvas');
-    c.width = 100; c.height = 100;
-    const tc = c.getContext('2d');
-    tc.drawImage(img, 0, 0, 100, 100);
-    const data = tc.getImageData(0, 0, 100, 100).data;
-
-    // K-means lite: sample random pixels and cluster
-    const samples = [];
-    for (let i = 0; i < data.length; i += 16) {
-      samples.push([data[i], data[i+1], data[i+2]]);
-    }
-
-    const k = 6;
-    let centers = samples.filter((_,i) => i % Math.floor(samples.length/k) === 0).slice(0, k);
-
-    for (let iter = 0; iter < 8; iter++) {
-      const sums = centers.map(() => [0,0,0,0]);
-      samples.forEach(s => {
-        let best = 0, bestD = Infinity;
-        centers.forEach((c2, j) => {
-          const d = (s[0]-c2[0])**2 + (s[1]-c2[1])**2 + (s[2]-c2[2])**2;
-          if (d < bestD) { bestD = d; best = j; }
-        });
-        sums[best][0] += s[0]; sums[best][1] += s[1];
-        sums[best][2] += s[2]; sums[best][3]++;
-      });
-      centers = sums.map(s => s[3] > 0 ? [s[0]/s[3], s[1]/s[3], s[2]/s[3]] : [128,128,128]);
-    }
-
-    const colors = centers.map(c2 => {
-      const r = Math.round(c2[0]).toString(16).padStart(2,'0');
-      const g = Math.round(c2[1]).toString(16).padStart(2,'0');
-      const b = Math.round(c2[2]).toString(16).padStart(2,'0');
-      return '#' + r + g + b;
-    });
-
-    renderPalette(colors);
-    URL.revokeObjectURL(url);
+function initPillSwitches() {
+  let pillInitDone = false;
+  const doInit = () => {
+    if (pillInitDone) return;
+    pillInitDone = true;
+    updatePillThumb('langTrack', 'langThumb', 0);
+    updatePillThumb('themeTrack', 'themeThumb', 0);
   };
-  img.src = url;
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(doInit);
+  } else {
+    setTimeout(doInit, 300);
+  }
+  setTimeout(doInit, 1500); // fallback
 }
 
-function renderPalette(colors) {
-  const row = document.getElementById('paletteRow');
-  row.innerHTML = '';
-  colors.forEach((color, i) => {
-    const swatch = document.createElement('div');
-    swatch.className = 'pal-swatch';
-    swatch.style.background = color;
-    swatch.title = color;
-    swatch.addEventListener('click', () => {
-      // Apply palette as gradient stops
-      const selected = row.querySelectorAll('.selected');
-      if (selected.length === 0) {
-        // First click: apply all as gradient
-        stops = colors.map((c2, j) => ({ color: c2, pos: j / (colors.length-1) }));
-        buildStopsUI();
-      }
-    });
-    row.appendChild(swatch);
+// ==================== STATE ====================
+let originalImageData = null;
+let originalImageDataBackup = null; // untouched copy for full reset
+let workingCanvas = document.createElement('canvas');
+let workingCtx = workingCanvas.getContext('2d');
+let hasImage = false;
+let currentFilter = 'none';
+let textPosition = 'top-center';
+let isCropping = false;
+let cropStart = null;
+let cropRect = null;
+let rotation = 0;
+let flipH = false, flipV = false;
+
+// ==================== UNDO / REDO ====================
+const HISTORY_LIMIT = 20;
+let undoStack = [];
+let redoStack = [];
+
+function captureSnapshot() {
+  return {
+    imageData: new ImageData(
+      new Uint8ClampedArray(originalImageData.data),
+      originalImageData.width, originalImageData.height
+    ),
+    ...getEditorState()
+  };
+}
+
+function pushHistory() {
+  if (!hasImage) return;
+  undoStack.push(captureSnapshot());
+  if (undoStack.length > HISTORY_LIMIT) undoStack.shift();
+  redoStack = [];
+  updateUndoRedoBtns();
+}
+
+function undo(mode) {
+  if (mode === 'all') {
+    if (hasImage) pushHistory();
+    suppressHistoryPush = true;
+    resetAdjustments();
+    setTimeout(() => { suppressHistoryPush = false; }, 700);
+    updateUndoRedoBtns();
+    return;
+  }
+  if (!undoStack.length) return;
+  // Push current state to redo
+  redoStack.push(captureSnapshot());
+  const snap = undoStack.pop();
+  restoreSnapshot(snap);
+  updateUndoRedoBtns();
+}
+
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push(captureSnapshot());
+  const snap = redoStack.pop();
+  restoreSnapshot(snap);
+  updateUndoRedoBtns();
+}
+
+function restoreSnapshot(snap) {
+  originalImageData = snap.imageData;
+  rotation = snap.rotation ?? 0;
+  flipH    = snap.flipH    ?? false;
+  flipV    = snap.flipV    ?? false;
+  suppressHistoryPush = true;
+  applyEditorState(snap);
+  setTimeout(() => { suppressHistoryPush = false; }, 700);
+  updateUndoRedoBtns();
+}
+
+function updateUndoRedoBtns() {
+  const u = document.getElementById('toolUndo');
+  const r = document.getElementById('toolRedo');
+  if (u) u.disabled = undoStack.length === 0;
+  if (r) r.disabled = redoStack.length === 0;
+}
+
+const OUTPUT_W = 1280, OUTPUT_H = 720;
+
+// ==================== FILE INPUT ====================
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) handleFile(file);
+  e.target.value = ''; // reset so same file can be re-selected
+});
+
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+
+function handleFile(file) {
+  if (file.type.startsWith('image/')) {
+    loadImage(file);
+  } else if (file.type.startsWith('video/')) {
+    loadVideo(file);
+  }
+}
+
+function loadImage(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      setupCanvas(img);
+      showToast(t('toastImageLoaded'), 'success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  document.getElementById('videoSection').style.display = 'none';
+}
+
+function setupCanvas(img) {
+  workingCanvas.width = OUTPUT_W;
+  workingCanvas.height = OUTPUT_H;
+  workingCtx.clearRect(0, 0, OUTPUT_W, OUTPUT_H);
+
+  // Fill black background
+  workingCtx.fillStyle = '#000';
+  workingCtx.fillRect(0, 0, OUTPUT_W, OUTPUT_H);
+
+  // Draw image centered/cropped to 16:9
+  const scale = Math.max(OUTPUT_W / img.width, OUTPUT_H / img.height);
+  const sw = img.width * scale, sh = img.height * scale;
+  const sx = (OUTPUT_W - sw) / 2, sy = (OUTPUT_H - sh) / 2;
+  workingCtx.drawImage(img, sx, sy, sw, sh);
+
+  originalImageData = workingCtx.getImageData(0, 0, OUTPUT_W, OUTPUT_H);
+  // Keep untouched backup for full reset
+  originalImageDataBackup = new ImageData(
+    new Uint8ClampedArray(originalImageData.data),
+    originalImageData.width, originalImageData.height
+  );
+  rotation = 0; flipH = false; flipV = false;
+  undoStack = []; redoStack = [];
+  currentFilter = 'none';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  resetSliders();
+  hasImage = true;
+  renderToMain();
+  showCanvasUI();
+  document.getElementById('canvasInfo').textContent = t('canvasInfo');
+}
+
+function showCanvasUI() {
+  document.getElementById('canvasPlaceholder').style.display = 'none';
+  document.getElementById('canvasWrapper').style.display = 'block';
+  document.getElementById('canvasToolbar').style.display = 'flex';
+}
+
+// ==================== VIDEO ====================
+let previewVideoEl = null;
+let currentBlobUrl = null;
+
+function loadVideo(file) {
+  // Revoke previous blob URL to free memory
+  if (currentBlobUrl) { URL.revokeObjectURL(currentBlobUrl); }
+  const url = URL.createObjectURL(file);
+  currentBlobUrl = url;
+
+  // Setup hidden video (used for frame capture)
+  const hidden = document.getElementById('hiddenVideo');
+  hidden.src = url;
+
+  // Setup preview video (visible player in panel)
+  previewVideoEl = document.getElementById('previewVideo');
+  previewVideoEl.src = url;
+  previewVideoEl.load();
+
+  previewVideoEl.onloadedmetadata = () => {
+    document.getElementById('videoScrubber').max = 1000;
+    document.getElementById('videoScrubber').value = 0;
+    updateVideoTimeDisplay();
+    document.getElementById('videoSection').style.display = 'block';
+    document.getElementById('framesGrid').innerHTML = '';
+    document.getElementById('savedFramesWrap').style.display = 'none';
+  };
+
+  // Update scrubber as video plays
+  previewVideoEl.ontimeupdate = () => {
+    if (!previewVideoEl.duration) return;
+    if (!scrubPending) { // don't fight the scrubber while user is dragging
+      const pct = (previewVideoEl.currentTime / previewVideoEl.duration) * 1000;
+      document.getElementById('videoScrubber').value = pct;
+    }
+    updateVideoTimeDisplay();
+  };
+
+  previewVideoEl.onended = () => {
+    document.getElementById('playPauseBtn').textContent = '▶';
+  };
+  previewVideoEl.onerror = () => {
+    showToast('⚠️ Video sa nedá načítať – skús MP4 alebo WebM.');
+    document.getElementById('videoSection').style.display = 'none';
+  };
+}
+
+function togglePlayPause() {
+  if (!previewVideoEl) return;
+  if (previewVideoEl.ended) {
+    previewVideoEl.currentTime = 0;
+  }
+  if (previewVideoEl.paused || previewVideoEl.ended) {
+    previewVideoEl.play();
+    document.getElementById('playPauseBtn').textContent = '⏸';
+  } else {
+    previewVideoEl.pause();
+    document.getElementById('playPauseBtn').textContent = '▶';
+  }
+}
+
+let scrubPending = false;
+function scrubVideo(val) {
+  if (!previewVideoEl || !previewVideoEl.duration) return;
+  const targetTime = (val / 1000) * previewVideoEl.duration;
+  updateVideoTimeDisplay();
+  if (scrubPending) return;
+  scrubPending = true;
+  requestAnimationFrame(() => {
+    previewVideoEl.currentTime = targetTime;
+    scrubPending = false;
   });
-
-  // Auto-apply
-  stops = colors.map((c2, j) => ({ color: c2, pos: j / (colors.length-1) }));
-  buildStopsUI();
 }
 
-// ─── SIZE ─────────────────────────────────────────────────────────
-function setSize(w, h) {
-  exportW = w; exportH = h;
-  document.getElementById('previewBadge').textContent = `${w} × ${h}`;
-  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-  const key = w === 2560 ? '2560' : w === 3840 ? '3840' : w === 1080 && h === 1080 ? '1080' : w === 1080 && h === 1350 ? '1350' : w === 1080 && h === 1920 ? '1920v' : '1920';
-  const btn = document.getElementById('s-'+key);
-  if (btn) btn.classList.add('active');
+// Hold-to-accelerate step
+let stepInterval = null, stepHoldTime = 0;
+function startStep(dir) {
+  if (!previewVideoEl) return;
+  if (stepInterval) { clearInterval(stepInterval); stepInterval = null; } // clear any existing
+  previewVideoEl.pause();
+  document.getElementById('playPauseBtn').textContent = '▶';
+  stepHoldTime = 0;
+  const tick = () => {
+    stepHoldTime += 80;
+    // Accelerate: starts at 1 frame (1/30s), after 500ms goes faster
+    const speed = stepHoldTime < 500 ? 1/30 : stepHoldTime < 1500 ? 0.2 : 0.5;
+    previewVideoEl.currentTime = Math.max(0, Math.min(previewVideoEl.duration,
+      previewVideoEl.currentTime + dir * speed));
+    updateVideoTimeDisplay();
+  };
+  tick(); // immediate first step on click
+  stepInterval = setInterval(tick, 80);
+}
+function stopStep() {
+  if (stepInterval) { clearInterval(stepInterval); stepInterval = null; }
 }
 
-// ─── DOWNLOAD ─────────────────────────────────────────────────────
-function downloadGradient() {
-  const offCanvas = document.createElement('canvas');
-  offCanvas.width = exportW;
-  offCanvas.height = exportH;
-  const offCtx = offCanvas.getContext('2d');
-  drawGradient(offCtx, exportW, exportH);
+function updateVideoTimeDisplay() {
+  if (!previewVideoEl) return;
+  const cur = previewVideoEl.currentTime || 0;
+  const dur = previewVideoEl.duration || 0;
+  document.getElementById('videoTimeDisplay').textContent =
+    `${formatTime(cur)} / ${formatTime(dur)}`;
+}
+
+// ── Progress save/restore per frame ──
+function getEditorState() {
+  return {
+    brightness: document.getElementById('brightness').value,
+    contrast:   document.getElementById('contrast').value,
+    saturation: document.getElementById('saturation').value,
+    sharpness:  document.getElementById('sharpness').value,
+    blur:       document.getElementById('blur').value,
+    vignette:   document.getElementById('vignette').value,
+    filter:     currentFilter,
+    rotation, flipH, flipV,
+    textContent: document.getElementById('textContent').value,
+    fontSize:   document.getElementById('fontSize').value,
+    fontFamily: document.getElementById('fontFamily').value,
+    textColor:  document.getElementById('textColor').value,
+    textShadow: document.getElementById('textShadow').value,
+    textPos:    textPosition,
+  };
+}
+
+function applyEditorState(state) {
+  if (!state) return;
+  // Use defaults for all fields to handle old snapshots missing some keys
+  const s = {
+    brightness: '0', contrast: '0', saturation: '0',
+    sharpness: '0', blur: '0', vignette: '0',
+    filter: 'none', rotation: 0, flipH: false, flipV: false,
+    textContent: '', fontSize: '60', fontFamily: 'Syne',
+    textColor: '#ffffff', textShadow: 'none', textPos: 'top-center',
+    ...state
+  };
+  document.getElementById('brightness').value = s.brightness;
+  document.getElementById('contrast').value   = s.contrast;
+  document.getElementById('saturation').value = s.saturation;
+  document.getElementById('sharpness').value  = s.sharpness;
+  document.getElementById('blur').value       = s.blur;
+  document.getElementById('vignette').value   = s.vignette;
+  document.getElementById('brightnessVal').textContent = s.brightness;
+  document.getElementById('contrastVal').textContent   = s.contrast;
+  document.getElementById('saturationVal').textContent = s.saturation;
+  document.getElementById('sharpnessVal').textContent  = s.sharpness;
+  document.getElementById('blurVal').textContent       = s.blur;
+  document.getElementById('vignetteVal').textContent   = s.vignette;
+  currentFilter = s.filter;
+  document.querySelectorAll('.filter-btn').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-filter') === currentFilter)
+  );
+  rotation = s.rotation;
+  flipH    = s.flipH;
+  flipV    = s.flipV;
+  document.getElementById('textContent').value  = s.textContent;
+  document.getElementById('fontSize').value     = s.fontSize;
+  document.getElementById('fontSizeVal').textContent = s.fontSize + 'px';
+  document.getElementById('fontFamily').value   = s.fontFamily;
+  document.getElementById('textColor').value    = s.textColor;
+  document.getElementById('textColorHex').value = s.textColor;
+  document.getElementById('textShadow').value   = s.textShadow;
+  textPosition = s.textPos;
+  document.querySelectorAll('.pos-btn').forEach(b =>
+    b.classList.toggle('active', b.getAttribute('data-pos') === textPosition)
+  );
+  renderToMain();
+}
+
+// Map from frame item element -> { fullDataURL, originalImageData, editorState }
+const frameStore = new Map();
+let activeFrameItem = null;
+
+function saveCurrentFrameProgress() {
+  if (!activeFrameItem || !hasImage) return;
+  const entry = frameStore.get(activeFrameItem);
+  if (entry) {
+    // Clone ImageData so future edits don't mutate the saved copy
+    entry.originalImageData = new ImageData(
+      new Uint8ClampedArray(originalImageData.data),
+      originalImageData.width,
+      originalImageData.height
+    );
+    entry.editorState = getEditorState();
+  }
+}
+
+let isCapturing = false;
+function captureCurrentFrame() {
+  if (!previewVideoEl || !previewVideoEl.duration) return;
+  if (isCapturing) return; // prevent double-capture
+  isCapturing = true;
+  const time = previewVideoEl.currentTime;
+  const hc = document.getElementById('hiddenCanvas');
+  hc.width = 1280; hc.height = 720;
+  const hctx = hc.getContext('2d');
+
+  const hidden = document.getElementById('hiddenVideo');
+  // Safety timeout – if seek never fires onseeked, release lock after 5s
+  const captureTimeout = setTimeout(() => {
+    isCapturing = false;
+    showToast('⚠️ Zachytenie framu zlyhalo.');
+  }, 5000);
+  hidden.onerror = () => { clearTimeout(captureTimeout); isCapturing = false; };
+  hidden.currentTime = time;
+  hidden.onseeked = () => {
+    clearTimeout(captureTimeout);
+    hctx.drawImage(hidden, 0, 0, 1280, 720);
+    const fullDataURL = hc.toDataURL('image/jpeg', 0.95);
+
+    // Save progress on currently active frame before switching
+    saveCurrentFrameProgress();
+
+    // Load into editor (fresh state)
+    const img = new Image();
+    img.onload = () => {
+      setupCanvas(img); // resets sliders & filter & sets originalImageData
+      // Store entry synchronously after setupCanvas – no race condition
+      frameStore.set(item, {
+        fullDataURL,
+        originalImageData: new ImageData(
+          new Uint8ClampedArray(originalImageData.data),
+          originalImageData.width,
+          originalImageData.height
+        ),
+        editorState: getEditorState()
+      });
+    };
+    img.src = fullDataURL;
+
+    // Thumbnail for strip
+    const thumbC = document.createElement('canvas');
+    thumbC.width = 320; thumbC.height = 180;
+    thumbC.getContext('2d').drawImage(hidden, 0, 0, 320, 180);
+    const thumbURL = thumbC.toDataURL('image/jpeg', 0.8);
+
+    const grid = document.getElementById('framesGrid');
+    const item = document.createElement('div');
+    item.className = 'frame-item active';
+    item.innerHTML = `<img src="${thumbURL}"><div class="frame-time">${formatTime(time)}</div>`;
+
+    item.onclick = () => {
+      // Save current frame's progress before switching
+      saveCurrentFrameProgress();
+
+      document.querySelectorAll('.frame-item').forEach(f => f.classList.remove('active'));
+      item.classList.add('active');
+      activeFrameItem = item;
+
+      const stored = frameStore.get(item);
+      if (!stored) return;
+
+      // Clear undo/redo – histories shouldn't mix between frames
+      undoStack = []; redoStack = [];
+      originalImageData = new ImageData(
+        new Uint8ClampedArray(stored.originalImageData.data),
+        stored.originalImageData.width, stored.originalImageData.height
+      );
+      // Update backup so reset restores THIS frame's original image
+      originalImageDataBackup = new ImageData(
+        new Uint8ClampedArray(stored.originalImageData.data),
+        stored.originalImageData.width, stored.originalImageData.height
+      );
+      applyEditorState(stored.editorState); // renderToMain called inside
+      updateUndoRedoBtns();
+      showCanvasUI();
+    };
+
+    document.querySelectorAll('.frame-item').forEach(f => f.classList.remove('active'));
+    activeFrameItem = item;
+    grid.appendChild(item);
+    document.getElementById('savedFramesWrap').style.display = 'block';
+    isCapturing = false;
+    showToast(t('toastFramesDone'), 'success');
+  };
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+// ==================== CANVAS RENDERING ====================
+function renderToMain() {
+  if (!hasImage) return;
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = OUTPUT_W;
+  canvas.height = OUTPUT_H;
+
+  // Apply adjustments to a temp canvas
+  const temp = document.createElement('canvas');
+  temp.width = OUTPUT_W; temp.height = OUTPUT_H;
+  const tctx = temp.getContext('2d');
+  tctx.putImageData(originalImageData, 0, 0);
+
+  // Apply filter
+  applyFilterToCtx(tctx);
+
+  // Apply adjustments
+  const imgData = tctx.getImageData(0, 0, OUTPUT_W, OUTPUT_H);
+  applyPixelAdjustments(imgData);
+  tctx.putImageData(imgData, 0, 0);
+
+  // Apply blur via CSS filter (for display)
+  const blurVal = parseFloat(document.getElementById('blur').value);
+
+  // Draw to main with rotation/flip
+  ctx.save();
+  ctx.translate(OUTPUT_W/2, OUTPUT_H/2);
+  if (rotation) ctx.rotate(rotation * Math.PI / 180);
+  if (flipH) ctx.scale(-1, 1);
+  if (flipV) ctx.scale(1, -1);
+  if (blurVal > 0) ctx.filter = `blur(${blurVal}px)`;
+  ctx.drawImage(temp, -OUTPUT_W/2, -OUTPUT_H/2);
+  ctx.filter = 'none';
+  ctx.restore();
+
+  // Vignette
+  const vigVal = parseInt(document.getElementById('vignette').value);
+  if (vigVal > 0) {
+    const grad = ctx.createRadialGradient(OUTPUT_W/2, OUTPUT_H/2, OUTPUT_H*0.3, OUTPUT_W/2, OUTPUT_H/2, OUTPUT_H*0.8);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, `rgba(0,0,0,${vigVal/100})`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, OUTPUT_W, OUTPUT_H);
+  }
+
+  // Text overlay
+  drawTextOverlay(ctx);
+}
+
+function applyFilterToCtx(tctx) {
+  const data = tctx.getImageData(0, 0, OUTPUT_W, OUTPUT_H);
+  const d = data.data;
+  switch(currentFilter) {
+    case 'bw':
+      for (let i=0;i<d.length;i+=4){const g=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114);d[i]=d[i+1]=d[i+2]=g;}
+      break;
+    case 'sepia':
+      for (let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];d[i]=Math.min(255,r*0.393+g*0.769+b*0.189);d[i+1]=Math.min(255,r*0.349+g*0.686+b*0.168);d[i+2]=Math.min(255,r*0.272+g*0.534+b*0.131);}
+      break;
+    case 'invert':
+      for (let i=0;i<d.length;i+=4){d[i]=255-d[i];d[i+1]=255-d[i+1];d[i+2]=255-d[i+2];}
+      break;
+    case 'vivid':
+      for (let i=0;i<d.length;i+=4){const avg=(d[i]+d[i+1]+d[i+2])/3;d[i]=clamp(d[i]+(d[i]-avg)*0.5);d[i+1]=clamp(d[i+1]+(d[i+1]-avg)*0.5);d[i+2]=clamp(d[i+2]+(d[i+2]-avg)*0.5);}
+      break;
+    case 'warm':
+      for (let i=0;i<d.length;i+=4){d[i]=clamp(d[i]+20);d[i+2]=clamp(d[i+2]-20);}
+      break;
+    case 'cold':
+      for (let i=0;i<d.length;i+=4){d[i]=clamp(d[i]-20);d[i+2]=clamp(d[i+2]+20);}
+      break;
+    case 'cinema':
+      for (let i=0;i<d.length;i+=4){d[i]=clamp(d[i]*1.1+10);d[i+1]=clamp(d[i+1]*0.95);d[i+2]=clamp(d[i+2]*0.85);}
+      break;
+    case 'fade':
+      for (let i=0;i<d.length;i+=4){d[i]=clamp(d[i]*0.8+40);d[i+1]=clamp(d[i+1]*0.8+40);d[i+2]=clamp(d[i+2]*0.8+40);}
+      break;
+  }
+  tctx.putImageData(data, 0, 0);
+}
+
+function clamp(v) { return Math.max(0, Math.min(255, Math.round(v))); }
+
+function applyPixelAdjustments(imgData) {
+  const d = imgData.data;
+  const brightness = parseInt(document.getElementById('brightness').value);
+  const contrast = parseInt(document.getElementById('contrast').value);
+  const saturation = parseInt(document.getElementById('saturation').value);
+  const sharpness = parseInt(document.getElementById('sharpness').value);
+
+  const contrastFactor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+  for (let i = 0; i < d.length; i += 4) {
+    let r = d[i], g = d[i+1], b = d[i+2];
+    r += brightness; g += brightness; b += brightness;
+    r = contrastFactor * (r - 128) + 128;
+    g = contrastFactor * (g - 128) + 128;
+    b = contrastFactor * (b - 128) + 128;
+    const gray = 0.299*r + 0.587*g + 0.114*b;
+    const sf = (saturation + 100) / 100;
+    r = gray + sf * (r - gray);
+    g = gray + sf * (g - gray);
+    b = gray + sf * (b - gray);
+    d[i] = clamp(r); d[i+1] = clamp(g); d[i+2] = clamp(b);
+  }
+
+  // Sharpness: simple unsharp mask (laplacian kernel)
+  if (sharpness > 0) {
+    const strength = sharpness * 0.15;
+    const w = imgData.width, h = imgData.height;
+    const src = new Uint8ClampedArray(d);
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const idx = (y * w + x) * 4;
+        for (let c = 0; c < 3; c++) {
+          const center = src[idx + c];
+          const lap = 4 * center
+            - src[((y-1)*w+x)*4+c]
+            - src[((y+1)*w+x)*4+c]
+            - src[(y*w+(x-1))*4+c]
+            - src[(y*w+(x+1))*4+c];
+          d[idx + c] = clamp(center + strength * lap);
+        }
+      }
+    }
+  }
+}
+
+function drawTextOverlay(ctx) {
+  const text = document.getElementById('textContent').value.trim();
+  if (!text) return;
+  const size = parseInt(document.getElementById('fontSize').value);
+  const font = document.getElementById('fontFamily').value;
+  const color = document.getElementById('textColor').value;
+  const shadow = document.getElementById('textShadow').value;
+
+  ctx.save();
+  ctx.font = `bold ${size}px ${font}`;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+
+  let x = OUTPUT_W / 2, y = OUTPUT_H / 2;
+  const pad = 60;
+  switch (textPosition) {
+    case 'top-left': x = pad; y = size + pad; ctx.textAlign = 'left'; break;
+    case 'top-center': x = OUTPUT_W/2; y = size + pad; break;
+    case 'top-right': x = OUTPUT_W - pad; y = size + pad; ctx.textAlign = 'right'; break;
+    case 'mid-left': x = pad; y = OUTPUT_H/2; ctx.textAlign = 'left'; break;
+    case 'center': x = OUTPUT_W/2; y = OUTPUT_H/2; break;
+    case 'mid-right': x = OUTPUT_W - pad; y = OUTPUT_H/2; ctx.textAlign = 'right'; break;
+    case 'bot-left': x = pad; y = OUTPUT_H - pad; ctx.textAlign = 'left'; break;
+    case 'bottom': x = OUTPUT_W/2; y = OUTPUT_H - pad; break;
+    case 'bot-right': x = OUTPUT_W - pad; y = OUTPUT_H - pad; ctx.textAlign = 'right'; break;
+  }
+
+  if (shadow === 'shadow') {
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2;
+  } else if (shadow === 'outline') {
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = size / 10;
+    ctx.strokeText(text, x, y);
+  } else if (shadow === 'glow') {
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 20;
+  }
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+// ==================== CONTROLS ====================
+let adjustDebounce = null;
+let suppressHistoryPush = false;
+function updateAdjust() {
+  document.getElementById('brightnessVal').textContent = document.getElementById('brightness').value;
+  document.getElementById('contrastVal').textContent = document.getElementById('contrast').value;
+  document.getElementById('saturationVal').textContent = document.getElementById('saturation').value;
+  document.getElementById('sharpnessVal').textContent = document.getElementById('sharpness').value;
+  document.getElementById('blurVal').textContent = document.getElementById('blur').value;
+  document.getElementById('vignetteVal').textContent = document.getElementById('vignette').value;
+  // Debounce history push so dragging a slider = 1 history entry, not hundreds
+  clearTimeout(adjustDebounce);
+  adjustDebounce = setTimeout(() => { if(hasImage && !suppressHistoryPush) pushHistory(); }, 600);
+  renderToMain();
+}
+
+function resetSliders() {
+  ['brightness','contrast','saturation','sharpness','blur','vignette'].forEach(id => {
+    document.getElementById(id).value = 0;
+  });
+  // Update display values only, caller handles render
+  document.getElementById('brightnessVal').textContent = '0';
+  document.getElementById('contrastVal').textContent   = '0';
+  document.getElementById('saturationVal').textContent = '0';
+  document.getElementById('sharpnessVal').textContent  = '0';
+  document.getElementById('blurVal').textContent       = '0';
+  document.getElementById('vignetteVal').textContent   = '0';
+}
+
+function resetAdjustments() {
+  if (!hasImage) return;
+  // Restore original image data (before any crop)
+  if (originalImageDataBackup) {
+    originalImageData = new ImageData(
+      new Uint8ClampedArray(originalImageDataBackup.data),
+      originalImageDataBackup.width, originalImageDataBackup.height
+    );
+  }
+  // Reset transform
+  rotation = 0; flipH = false; flipV = false;
+  // Reset filter
+  currentFilter = 'none';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  // Reset sliders (updateAdjust handles renderToMain)
+  ['brightness','contrast','saturation','sharpness','blur','vignette'].forEach(id => {
+    document.getElementById(id).value = 0;
+  });
+  updateAdjust(); // single render
+}
+
+let textDebounce = null;
+function updateTextOverlay() {
+  document.getElementById('textColorHex').value = document.getElementById('textColor').value;
+  clearTimeout(textDebounce);
+  textDebounce = setTimeout(() => { if(hasImage && !suppressHistoryPush) pushHistory(); }, 800);
+  renderToMain();
+}
+
+function syncColorFromText() {
+  const v = document.getElementById('textColorHex').value;
+  const expanded = v.replace(/^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/, '#$1$1$2$2$3$3');
+  if (/^#[0-9a-fA-F]{6}$/.test(expanded)) {
+    document.getElementById('textColor').value = expanded;
+    renderToMain();
+  }
+}
+
+function setTextPos(btn) {
+  pushHistory();
+  document.querySelectorAll('.pos-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  textPosition = btn.getAttribute('data-pos');
+  renderToMain();
+}
+
+function clearText() {
+  pushHistory();
+  document.getElementById('textContent').value = '';
+  renderToMain();
+}
+
+// ==================== FILTERS GRID ====================
+const filters = [
+  { key: 'none', labelKey: 'filterNone' },
+  { key: 'vivid', labelKey: 'filterVivid' },
+  { key: 'cinema', labelKey: 'filterCinema' },
+  { key: 'cold', labelKey: 'filterCold' },
+  { key: 'bw', labelKey: 'filterBW' },
+  { key: 'sepia', labelKey: 'filterSepia' },
+  { key: 'invert', labelKey: 'filterInvert' },
+  { key: 'warm', labelKey: 'filterWarm' },
+  { key: 'fade', labelKey: 'filterFade' },
+];
+
+function buildFiltersGrid() {
+  const grid = document.getElementById('filtersGrid');
+  grid.innerHTML = '';
+  filters.forEach(f => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (currentFilter === f.key ? ' active' : '');
+    btn.setAttribute('data-filter', f.key);
+    btn.innerHTML = `<div class="filter-preview"><canvas id="fp_${f.key}"></canvas></div>${t(f.labelKey)}`;
+    btn.onclick = () => {
+      pushHistory();
+      currentFilter = f.key;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderToMain();
+    };
+    grid.appendChild(btn);
+    if (hasImage) renderFilterPreview(f.key);
+  });
+}
+
+function renderFilterPreview(filterKey) {
+  const c = document.getElementById(`fp_${filterKey}`);
+  if (!c || !originalImageData) return;
+  c.width = 80; c.height = 45;
+  const ctx = c.getContext('2d');
+  // Use a full-res source from originalImageData, then scale down
+  const src = document.createElement('canvas');
+  src.width = OUTPUT_W; src.height = OUTPUT_H;
+  src.getContext('2d').putImageData(originalImageData, 0, 0);
+  if (filterKey !== 'none') {
+    const orig = currentFilter;
+    currentFilter = filterKey;
+    applyFilterToCtx(src.getContext('2d'));
+    currentFilter = orig;
+  }
+  ctx.drawImage(src, 0, 0, 80, 45);
+}
+
+// ==================== TOOLS ====================
+function activateTool(tool) {
+  if (tool === 'crop') {
+    isCropping = !isCropping;
+    document.getElementById('toolCrop').classList.toggle('active', isCropping);
+    document.getElementById('panelCenter').classList.toggle('crop-mode', isCropping);
+    if (!isCropping) hideCropOverlay();
+  }
+}
+
+function hideCropOverlay() {
+  document.getElementById('cropOverlay').style.display = 'none';
+}
+
+// Crop drawing on canvas
+const mainCanvas = document.getElementById('mainCanvas');
+let cropDrag = false, cropOrigin = {x:0,y:0};
+
+mainCanvas.addEventListener('mousedown', e => {
+  if (!isCropping) return;
+  cropDrag = true;
+  const r = mainCanvas.getBoundingClientRect();
+  const dispW = r.width, dispH = r.height;
+  const scaleX = OUTPUT_W / dispW;
+  const scaleY = OUTPUT_H / dispH;
+  // Use clientX/Y for fixed-position overlay
+  cropOrigin = { x: e.clientX, y: e.clientY, r };
+  cropStart = { x: (e.clientX - r.left) * scaleX, y: (e.clientY - r.top) * scaleY };
+});
+
+mainCanvas.addEventListener('mousemove', e => {
+  if (!cropDrag) return;
+  // Use live getBoundingClientRect – if window resized, recalculate scale
+  const r = mainCanvas.getBoundingClientRect();
+  const scaleX = OUTPUT_W / r.width;
+  const scaleY = OUTPUT_H / r.height;
+  const clampedX = Math.max(r.left, Math.min(r.right,  e.clientX));
+  const clampedY = Math.max(r.top,  Math.min(r.bottom, e.clientY));
+  const overlay = document.getElementById('cropOverlay');
+  overlay.style.display = 'block';
+  overlay.style.left   = Math.min(cropOrigin.x, clampedX) + 'px';
+  overlay.style.top    = Math.min(cropOrigin.y, clampedY) + 'px';
+  overlay.style.width  = Math.abs(clampedX - cropOrigin.x) + 'px';
+  overlay.style.height = Math.abs(clampedY - cropOrigin.y) + 'px';
+  cropRect = {
+    x: Math.min(cropStart.x, (clampedX - r.left) * scaleX),
+    y: Math.min(cropStart.y, (clampedY - r.top)  * scaleY),
+    w: Math.abs((clampedX - r.left) * scaleX - cropStart.x),
+    h: Math.abs((clampedY - r.top)  * scaleY - cropStart.y)
+  };
+});
+
+mainCanvas.addEventListener('mouseup', () => {
+  if (!cropDrag) return;
+  cropDrag = false;
+  if (cropRect && cropRect.w > 20 && cropRect.h > 20) applyCrop();
+  hideCropOverlay();
+  isCropping = false;
+  document.getElementById('toolCrop').classList.remove('active');
+  document.getElementById('panelCenter').classList.remove('crop-mode');
+});
+
+function applyCrop() {
+  if (!cropRect || cropRect.w < 10 || cropRect.h < 10) return;
+  pushHistory();
+  // Draw from a clean canvas using originalImageData (avoids CSS-scale distortion)
+  const src = document.createElement('canvas');
+  src.width = OUTPUT_W; src.height = OUTPUT_H;
+  src.getContext('2d').putImageData(originalImageData, 0, 0);
+  const temp = document.createElement('canvas');
+  temp.width = OUTPUT_W; temp.height = OUTPUT_H;
+  const tctx = temp.getContext('2d');
+  tctx.drawImage(src, cropRect.x, cropRect.y, cropRect.w, cropRect.h, 0, 0, OUTPUT_W, OUTPUT_H);
+  originalImageData = tctx.getImageData(0, 0, OUTPUT_W, OUTPUT_H);
+  cropRect = null;
+  renderToMain();
+}
+
+function rotateCanvas(deg) {
+  rotation = (rotation + deg) % 360;
+  renderToMain();
+}
+
+function flipCanvas(dir) {
+  if (dir === 'h') flipH = !flipH;
+  else flipV = !flipV;
+  renderToMain();
+}
+
+// ==================== TABS ====================
+function switchTab(tab) {
+  ['adjust','filters','text'].forEach(name => {
+    document.getElementById(name+'Tab').classList.toggle('active', name === tab);
+    document.getElementById('tab'+name.charAt(0).toUpperCase()+name.slice(1)).classList.toggle('active', name === tab);
+  });
+  if (tab === 'filters') buildFiltersGrid();
+}
+
+// ==================== EXPORT ====================
+function exportImage() {
+  if (!hasImage) return;
+  const format = document.getElementById('exportFormat').value;
+  const quality = parseFloat(document.getElementById('exportQuality').value);
   const link = document.createElement('a');
-  link.download = `gradflow_${exportW}x${exportH}.png`;
-  link.href = offCanvas.toDataURL('image/png');
+  link.download = `thumbify_thumbnail.${format === 'jpeg' ? 'jpg' : 'png'}`;
+  link.href = document.getElementById('mainCanvas').toDataURL(`image/${format}`, quality);
   link.click();
+  showToast(t('toastDownloaded'), 'success');
 }
 
-// ─── START ────────────────────────────────────────────────────────
-init();
+async function copyToClipboard() {
+  if (!hasImage) return;
+  try {
+    const blob = await new Promise(res => document.getElementById('mainCanvas').toBlob(res, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+    showToast(t('toastCopied'), 'success');
+  } catch(e) {
+    showToast(t('toastCopyFail'));
+  }
+}
+
+// ==================== TOAST ====================
+let toastTimeout;
+function showToast(msg, type = '') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+// ==================== KEYBOARD SHORTCUTS ====================
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement.tagName.toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') { e.preventDefault(); undo(); }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); }
+});
+
+// ==================== INIT ====================
+buildFiltersGrid();
+applyTranslations();
+initPillSwitches();
+updateUndoRedoBtns();
+
+// Step button hold-to-accelerate listeners (added after DOM ready)
+document.addEventListener('DOMContentLoaded', () => {
+  const back = document.getElementById('stepBackBtn');
+  const fwd  = document.getElementById('stepFwdBtn');
+  if (back) {
+    back.addEventListener('mousedown', () => startStep(-1));
+    back.addEventListener('touchstart', (e) => { e.preventDefault(); startStep(-1); });
+  }
+  if (fwd) {
+    fwd.addEventListener('mousedown', () => startStep(1));
+    fwd.addEventListener('touchstart', (e) => { e.preventDefault(); startStep(1); });
+  }
+  // Global stop – catches mouseup even if cursor left the button
+  window.addEventListener('mouseup', stopStep);
+  window.addEventListener('touchend', stopStep);
+});
 </script>
 </body>
 </html>
